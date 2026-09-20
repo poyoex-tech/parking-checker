@@ -1,0 +1,11 @@
+{
+  "name": "駐車料金チェッカー",
+  "short_name": "駐車料金",
+  "description": "ザ・パーク・あなぶき・砂利の駐車料金を比較",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#1677ff",
+  "lang": "ja",
+  "orientation": "portrait"
+}

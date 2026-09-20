@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1677ff">
+  <link rel="manifest" href="manifest.json">
+  <title>駐車料金チェッカー</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Hiragino Sans",
+        "Yu Gothic",
+        sans-serif;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    h1 {
+      margin: 5px 0 4px;
+      text-align: center;
+      font-size: 25px;
+    }
+
+    .sub {
+      text-align: center;
+      color: #777;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 17px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      font-size: 16px;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      background: white;
+      margin-bottom: 15px;
+    }
+
+    button {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 14px;
+      background: #1677ff;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .best {
+      border: 3px solid #1677ff;
+      text-align: center;
+    }
+
+    .best-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #1677ff;
+    }
+
+    .best-name {
+      font-size: 25px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .price {
+      font-size: 34px;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .parking-name {
+      font-weight: bold;
+    }
+
+    .small {
+      color: #777;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .row-price {
+      white-space: nowrap;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .move {
+      background: #fff8e7;
+    }
+
+    .move-route {
+      font-size: 21px;
+      font-weight: bold;
+      line-height: 1.5;
+      margin: 8px 0;
+    }
+
+    .saving {
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .good {
+      color: #087f23;
+    }
+
+    .notice {
+      color: #777;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>🚗 駐車料金チェッカー</h1>
+  <div class="sub">
+    ザ・パーク / あなぶき / 砂利
+  </div>
+
+  <div class="card">
+
+    <label for="start">入庫日時</label>
+    <input id="start" type="datetime-local">
+
+    <label for="end">出庫予定日時</label>
+    <input id="end" type="datetime-local">
+
+    <button id="calcButton">
+      最安を調べる
+    </button>
+
+  </div>
+
+
+  <div id="results" class="hidden">
+
+    <div class="card best">
+
+      <div class="best-title">
+        🥇 移動しないなら最安
+      </div>
+
+      <div id="bestName" class="best-name"></div>
+
+      <div id="bestPrice" class="price"></div>
+
+      <div id="duration" class="small"></div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="row">
+        <div>
+          <div class="parking-name">ザ・パーク</div>
+          <div class="small">
+            昼 最大900円 / 夜 最大300円
+          </div>
+        </div>
+
+        <div id="parkPrice" class="row-price"></div>
+      </div>
+
+
+      <div class="row">
+        <div>
+          <div class="parking-name">あなぶき</div>
+          <div class="small">
+            昼 最大800円（土日祝600円） / 夜 最大100円
+          </div>
+        </div>
+
+        <div id="anaPrice" class="row-price"></div>
+      </div>
+
+
+      <div class="row">
+        <div>
+          <div class="parking-name">🪨 砂利</div>
+          <div class="small">
+            入庫から24時間 800円
+          </div>
+        </div>
+
+        <div id="gravelPrice" class="row-price"></div>
+      </div>
+
+    </div>
+
+
+    <div id="moveCard" class="card move hidden">
+
+      <div class="best-title">
+        🚙 移動するともっと安い！
+      </div>
+
+      <div id="moveRoute" class="move-route"></div>
+
+      <div id="movePrice" class="price"></div>
+
+      <div id="moveSaving" class="saving good"></div>
+
+    </div>
+
+
+    <div id="noMoveCard" class="card hidden">
+
+      <strong>👌 移動しなくてOK</strong>
+
+      <div class="small" style="margin-top:6px;">
+        途中で駐車場を変えても、これ以上安くなりません。
+      </div>
+
+    </div>
+
+
+    <div class="notice">
+      ※ 最大料金は繰り返し適用として計算しています。<br>
+      ※ 砂利は入庫から24時間ごとに800円です。<br>
+      ※ 移動プランは途中1回まで比較します。<br>
+      ※ あなぶきは土日祝の昼間最大600円を自動判定します。
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const HOUR = 60 * 60 * 1000;
+
+
+/* -------------------------
+   共通
+------------------------- */
+
+function yen(value) {
+  return value.toLocaleString("ja-JP") + "円";
+}
+
+
+function ceilHours(milliseconds) {
+  return Math.ceil(milliseconds / HOUR);
+}
+
+/* -------------------------
+   日本の祝日判定
+   2026〜2030年対応
+------------------------- */
+
+const holidays = new Set([
+  // 2026
+  "2026-01-01","2026-01-12","2026-02-11","2026-02-23",
+  "2026-03-20","2026-04-29","2026-05-03","2026-05-04",
+  "2026-05-05","2026-05-06","2026-07-20","2026-08-11",
+  "2026-09-21","2026-09-22","2026-09-23","2026-10-12",
+  "2026-11-03","2026-11-23",
+
+  // 2027
+  "2027-01-01","2027-01-11","2027-02-11","2027-02-23",
+  "2027-03-21","2027-03-22","2027-04-29","2027-05-03",
+  "2027-05-04","2027-05-05","2027-07-19","2027-08-11",
+  "2027-09-20","2027-09-23","2027-10-11","2027-11-03",
+  "2027-11-23",
+
+  // 2028
+  "2028-01-01","2028-01-10","2028-02-11","2028-02-23",
+  "2028-03-20","2028-04-29","2028-05-03","2028-05-04",
+  "2028-05-05","2028-07-17","2028-08-11","2028-09-18",
+  "2028-09-22","2028-10-09","2028-11-03","2028-11-23",
+
+  // 2029
+  "2029-01-01","2029-01-08","2029-02-11","2029-02-12",
+  "2029-02-23","2029-03-20","2029-04-29","2029-04-30",
+  "2029-05-03","2029-05-04","2029-05-05","2029-07-16",
+  "2029-08-11","2029-09-17","2029-09-23","2029-09-24",
+  "2029-10-08","2029-11-03","2029-11-23",
+
+  // 2030
+  "2030-01-01","2030-01-14","2030-02-11","2030-02-23",
+  "2030-03-20","2030-04-29","2030-05-03","2030-05-04",
+  "2030-05-05","2030-05-06","2030-07-15","2030-08-11",
+  "2030-08-12","2030-09-16","2030-09-23","2030-10-14",
+  "2030-11-03","2030-11-04","2030-11-23"
+]);
+
+function dateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}-${m}-${d}`;
+}
+
+function isWeekendOrHoliday(date) {
+  const day = date.getDay();
+
+  return (
+    day === 0 ||
+    day === 6 ||
+    holidays.has(dateKey(date))
+  );
+}
+
+/* -------------------------
+   時間帯料金
+
+   startHour → endHour の料金を
+   日ごとに計算する
+------------------------- */
+
+function timeBandPrice(
+  start,
+  end,
+  startHour,
+  endHour,
+  hourlyRate,
+  maximum,
+  weekendMaximum = null
+) {
+
+  let total = 0;
+
+  let day = new Date(start);
+
+  day.setHours(0, 0, 0, 0);
+
+  // 夜間帯が前日から始まる場合があるので
+  // 1日前からチェック
+  day.setDate(day.getDate() - 1);
+
+
+  while (day < end) {
+
+    const bandStart = new Date(day);
+    const bandEnd = new Date(day);
+
+    bandStart.setHours(startHour, 0, 0, 0);
+    bandEnd.setHours(endHour, 0, 0, 0);
+
+
+    // 18:00 → 翌8:00 のようなケース
+    if (endHour <= startHour) {
+      bandEnd.setDate(bandEnd.getDate() + 1);
+    }
+
+
+    const actualStart =
+      new Date(Math.max(start, bandStart));
+
+    const actualEnd =
+      new Date(Math.min(end, bandEnd));
+
+
+    if (actualEnd > actualStart) {
+
+      const hours =
+        ceilHours(actualEnd - actualStart);
+
+      let price =
+        hours * hourlyRate;
+
+      let maxPrice = maximum;
+
+
+      // 土日祝判定
+      if (
+        weekendMaximum !== null &&
+        isWeekendOrHoliday(bandStart)
+      ) {
+        maxPrice = weekendMaximum;
+      }
+
+
+      price =
+        Math.min(price, maxPrice);
+
+      total += price;
+    }
+
+
+    day.setDate(day.getDate() + 1);
+
+  }
+
+
+  return total;
+}
+
+
+/* -------------------------
+   ザ・パーク
+------------------------- */
+
+function pricePark(start, end) {
+
+  const daytime =
+    timeBandPrice(
+      start,
+      end,
+      8,
+      18,
+      200,
+      900
+    );
+
+
+  const nighttime =
+    timeBandPrice(
+      start,
+      end,
+      18,
+      8,
+      100,
+      300
+    );
+
+
+  return daytime + nighttime;
+}
+
+
+/* -------------------------
+   あなぶき
+------------------------- */
+
+function priceAnabuki(start, end) {
+
+  const daytime =
+    timeBandPrice(
+      start,
+      end,
+      8,
+      20,
+      200,
+      800,
+      600
+    );
+
+
+  const nighttime =
+    timeBandPrice(
+      start,
+      end,
+      20,
+      8,
+      100,
+      100
+    );
+
+
+  return daytime + nighttime;
+}
+
+
+/* -------------------------
+   砂利
+------------------------- */
+
+function priceGravel(start, end) {
+
+  const duration =
+    end - start;
+
+  const blocks =
+    Math.ceil(
+      duration /
+      (24 * HOUR)
+    );
+
+  return blocks * 800;
+}
+
+
+/* -------------------------
+   全駐車場
+------------------------- */
+
+const parkingLots = [
+
+  {
+    name: "ザ・パーク",
+    price: pricePark
+  },
+
+  {
+    name: "あなぶき",
+    price: priceAnabuki
+  },
+
+  {
+    name: "砂利",
+    price: priceGravel
+  }
+
+];
+
+
+/* -------------------------
+   移動候補時刻を作る
+------------------------- */
+
+function makeMoveTimes(start, end) {
+
+  const times = [];
+
+  let day = new Date(start);
+
+  day.setHours(0, 0, 0, 0);
+
+
+  while (day <= end) {
+
+    // 料金体系が切り替わる時間
+    [8, 18, 20].forEach(hour => {
+
+      const t = new Date(day);
+
+      t.setHours(hour, 0, 0, 0);
+
+      if (t > start && t < end) {
+        times.push(t);
+      }
+
+    });
+
+
+    day.setDate(day.getDate() + 1);
+
+  }
+
+/*
+  砂利の24時間更新境界を
+  移動候補にする
+*/
+
+let gravelBoundary =
+  new Date(
+    start.getTime() +
+    24 * HOUR
+  );
+
+
+while (gravelBoundary < end) {
+
+  // 24時間ちょうど
+  times.push(
+    new Date(gravelBoundary)
+  );
+
+  // 24時間の1分前
+  const before =
+    new Date(
+      gravelBoundary.getTime() -
+      60 * 1000
+    );
+
+  if (
+    before > start &&
+    before < end
+  ) {
+    times.push(before);
+  }
+
+
+  gravelBoundary =
+    new Date(
+      gravelBoundary.getTime() +
+      24 * HOUR
+    );
+
+}
+
+
+
+  // 重複削除
+
+  const unique =
+    [...new Map(
+      times.map(
+        t => [t.getTime(), t]
+      )
+    ).values()];
+
+
+  return unique;
+}
+
+
+/* -------------------------
+   移動1回の最安探索
+------------------------- */
+
+function findBestMove(start, end) {
+
+  const moveTimes =
+    makeMoveTimes(start, end);
+
+  let best = null;
+
+
+  for (const moveTime of moveTimes) {
+
+    for (const first of parkingLots) {
+
+      for (const second of parkingLots) {
+
+        // 同じ駐車場なら
+        // 移動する意味なし
+        if (first.name === second.name) {
+          continue;
+        }
+
+
+        const firstPrice =
+          first.price(
+            start,
+            moveTime
+          );
+
+
+        const secondPrice =
+          second.price(
+            moveTime,
+            end
+          );
+
+
+        const total =
+          firstPrice +
+          secondPrice;
+
+
+        if (
+          best === null ||
+          total < best.total
+        ) {
+
+          best = {
+            first:
+              first.name,
+
+            second:
+              second.name,
+
+            time:
+              moveTime,
+
+            total:
+              total
+          };
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+  return best;
+}
+
+
+/* -------------------------
+   日時表示
+------------------------- */
+
+function formatMoveTime(date) {
+
+  const month =
+    date.getMonth() + 1;
+
+  const day =
+    date.getDate();
+
+  const hour =
+    String(
+      date.getHours()
+    ).padStart(2, "0");
+
+  const minute =
+    String(
+      date.getMinutes()
+    ).padStart(2, "0");
+
+
+  return (
+    month +
+    "/" +
+    day +
+    " " +
+    hour +
+    ":" +
+    minute
+  );
+}
+
+
+/* -------------------------
+   メイン計算
+------------------------- */
+
+function calculate() {
+
+  const startValue =
+    document.getElementById("start").value;
+
+  const endValue =
+    document.getElementById("end").value;
+
+
+  if (
+    !startValue ||
+    !endValue
+  ) {
+
+    alert(
+      "入庫日時と出庫予定日時を入れてね！"
+    );
+
+    return;
+  }
+
+
+  const start =
+    new Date(startValue);
+
+  const end =
+    new Date(endValue);
+
+
+  if (end <= start) {
+
+    alert(
+      "出庫予定は入庫より後にしてね！"
+    );
+
+    return;
+  }
+
+
+  const park =
+    pricePark(start, end);
+
+  const ana =
+    priceAnabuki(start, end);
+
+  const gravel =
+    priceGravel(start, end);
+
+
+  const normalOptions = [
+
+    {
+      name: "ザ・パーク",
+      price: park
+    },
+
+    {
+      name: "あなぶき",
+      price: ana
+    },
+
+    {
+      name: "砂利",
+      price: gravel
+    }
+
+  ];
+
+
+  normalOptions.sort(
+    (a, b) =>
+      a.price - b.price
+  );
+
+
+  const bestPrice =
+  normalOptions[0].price;
+
+const bestNames =
+  normalOptions
+    .filter(
+      option =>
+        option.price === bestPrice
+    )
+    .map(
+      option =>
+        option.name
+    );
+
+const bestNormal = {
+  name: bestNames.join("・"),
+  price: bestPrice
+};
+
+
+  document.getElementById(
+    "parkPrice"
+  ).textContent =
+    yen(park);
+
+
+  document.getElementById(
+    "anaPrice"
+  ).textContent =
+    yen(ana);
+
+
+  document.getElementById(
+    "gravelPrice"
+  ).textContent =
+    yen(gravel);
+
+
+  document.getElementById(
+    "bestName"
+  ).textContent =
+    bestNormal.name;
+
+
+  document.getElementById(
+    "bestPrice"
+  ).textContent =
+    yen(
+      bestNormal.price
+    );
+
+
+  const hours =
+    (end - start) /
+    HOUR;
+
+
+  document.getElementById(
+    "duration"
+  ).textContent =
+    "駐車時間：約 " +
+    hours.toFixed(1) +
+    " 時間";
+
+
+  /* 移動あり */
+
+  const bestMove =
+    findBestMove(
+      start,
+      end
+    );
+
+
+  const moveCard =
+    document.getElementById(
+      "moveCard"
+    );
+
+
+  const noMoveCard =
+    document.getElementById(
+      "noMoveCard"
+    );
+
+
+  if (
+    bestMove &&
+    bestMove.total <
+      bestNormal.price
+  ) {
+
+    moveCard.classList.remove(
+      "hidden"
+    );
+
+    noMoveCard.classList.add(
+      "hidden"
+    );
+
+
+    document.getElementById(
+      "moveRoute"
+    ).innerHTML =
+      bestMove.first +
+      "<br>↓ " +
+      formatMoveTime(
+        bestMove.time
+      ) +
+      " に移動<br>" +
+      bestMove.second;
+
+
+    document.getElementById(
+      "movePrice"
+    ).textContent =
+      yen(
+        bestMove.total
+      );
+
+
+    const saving =
+      bestNormal.price -
+      bestMove.total;
+
+
+    document.getElementById(
+      "moveSaving"
+    ).textContent =
+      "移動すると " +
+      yen(saving) +
+      " お得！";
+
+  }
+
+  else {
+
+    moveCard.classList.add(
+      "hidden"
+    );
+
+    noMoveCard.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  document.getElementById(
+    "results"
+  ).classList.remove(
+    "hidden"
+  );
+
+}
+
+
+/* -------------------------
+   ボタン
+------------------------- */
+
+document.getElementById(
+  "calcButton"
+).addEventListener(
+  "click",
+  calculate
+);
+
+
+/* -------------------------
+   初期日時
+
+   入庫 = 現在
+   出庫 = 3時間後
+------------------------- */
+
+function datetimeLocalValue(date) {
+
+  const pad =
+    value =>
+      String(value)
+        .padStart(2, "0");
+
+
+  return (
+    date.getFullYear() +
+    "-" +
+    pad(
+      date.getMonth() + 1
+    ) +
+    "-" +
+    pad(
+      date.getDate()
+    ) +
+    "T" +
+    pad(
+      date.getHours()
+    ) +
+    ":" +
+    pad(
+      date.getMinutes()
+    )
+  );
+}
+
+
+const now = new Date();
+
+const threeHoursLater =
+  new Date(
+    now.getTime() +
+    3 * HOUR
+  );
+
+const startInput =
+  document.getElementById("start");
+
+const endInput =
+  document.getElementById("end");
+
+
+// 最初に表示する時間
+startInput.value =
+  datetimeLocalValue(now);
+
+endInput.value =
+  datetimeLocalValue(threeHoursLater);
+
+
+// 出庫は入庫より前を選べない
+endInput.min =
+  startInput.value;
+
+
+// 入庫日時を変更したとき
+startInput.addEventListener(
+  "change",
+  () => {
+
+    // 出庫で選べる最小日時を
+    // 新しい入庫日時に変更
+    endInput.min =
+      startInput.value;
+
+    // 出庫が入庫より前になった場合だけ
+    // 出庫を入庫と同じ日時に合わせる
+    if (
+      !endInput.value ||
+      endInput.value < startInput.value
+    ) {
+      endInput.value =
+        startInput.value;
+    }
+
+  }
+);
+
+/* -------------------------
+   Service Worker登録
+------------------------- */
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./sw.js")
+      .then(() => {
+        console.log("Service Worker 登録成功");
+      })
+      .catch(error => {
+        console.error(
+          "Service Worker 登録失敗",
+          error
+        );
+      });
+  });
+}
+
+</script>
+
+</body>
+</html>
