@@ -1,9 +1,12 @@
-const CACHE_NAME = "parking-checker-v1";
+const CACHE_NAME = "parking-checker-v2";
 
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png"
 ];
 
 self.addEventListener("install", event => {
